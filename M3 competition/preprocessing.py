@@ -15,14 +15,15 @@ class Preprocess():
     - delay_input
     '''
 
+    
     def __init__(self, data, lag, h_prev = 0, num_series = 0, target_position = -1):
         self.data = data
         self.h_prev = h_prev
         self.num_series = num_series
         self.target_position = target_position
         self.lag = lag
-
-
+    
+    
     def diff_series(self):
         '''
         Classical series differentiation.
@@ -34,6 +35,7 @@ class Preprocess():
 
         return in_sample, out_sample
 
+    
     def detrend_series(self):
         '''
         Detrend method using Linear Regression.
@@ -61,16 +63,22 @@ class Preprocess():
 
         return in_sample, out_sample, trends
 
-    def split_data(self):
+    
+    def split_data(self, data=None):
         '''
         Split data into in-sample data and out-sample data
         OUTPUT: In-sample data (in_sample) and Out-sample data (out_sample)
         '''
-        in_sample = self.data[:self.data.shape[0]-self.h_prev,:]
-        out_sample = self.data[self.data.shape[0]-self.h_prev:,:]
+        if data is None:
+            in_sample = self.data[:self.data.shape[0]-self.h_prev,:]
+            out_sample = self.data[self.data.shape[0]-self.h_prev:,:]
+        else:
+            in_sample = data[:data.shape[0]-self.h_prev,:]
+            out_sample = data[data.shape[0]-self.h_prev:,:]
 
         return in_sample, out_sample
-
+    
+    
     def delay_input(self,in_sample=None, lag = 0):
         '''
         Prepare data for multivariate time series problem, creating delayed inputs. If in-sample data is not given, delay_input use
@@ -106,8 +114,8 @@ class Preprocess():
                     yp_lagged[:,i*lag+k] = self.data[lag-k:self.data.shape[0]- self.h_prev - k-1,i]
 
         return yt, yp, yp_lagged
-
-
+    
+    
     def spearman_corr_weights(self,in_sample=None):
         '''
         Using Spearman's correlation to create an array of probabilities to select subsamples (for linear correlation)
@@ -198,7 +206,7 @@ class Preprocess():
     
     def generate_subsamples(self, correlation_array, autocorrelation_matrix, num_inputs, in_sample = None, yt = None, yp = None, yp_lagged = None, vars_to_keep = None):
         
-        if yp_lagged is None:
+        if yt is None and yp is None and yp_lagged is None:
             yt, yp, yp_lagged = self.delay_input(in_sample, self.lag)
         
         if vars_to_keep is None:

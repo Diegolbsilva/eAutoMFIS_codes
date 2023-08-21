@@ -221,22 +221,22 @@ def plot_predict(lim=0,yt_totest=[],num_series=0,data=[],in_sample=[],out_sample
         errors[2, i] = MAPE
         
     if rmse < lim:
-        with open('{}.txt'.format(filename),'w') as f:
-            for i in range(num_series):
-                rmse = sqrt(mean_squared_error(Y__[:,i], Yt__[:,i]))
-                mae = mean_absolute_error(Y__[:,i], Yt__[:,i])
-                MAPE = mape(Yt__[:, i], Y__[:, i])
-                rrse_error = rrse(Y__[:,i], Yt__[:,i])
-                
-                #print('Outsample RRSE for serie {} is {} \n'.format(i+1,rrse_error), file=f)
-                print('Outsample RMSE for serie {} is {} \n'.format(i+1,rmse), file=f)
-                print('Outsample MAE for serie {} is {} \n'.format(i+1,mae), file=f)
-                #print('Outsample SMAPE for serie {} is {} \n'.format(i+1,smape(Yt__[:,i],Y__[:,i])),file=f)
-                print('Outsample MAPE for serie {} is {} \n'.format(i + 1, 100*MAPE), file=f)
-                errors[0,i] = rmse
-                errors[1, i] = mae
-                errors[2, i] = MAPE
-                errors[3,i] = rrse_error
+        # with open('{}.txt'.format(filename),'w') as f:
+        for i in range(num_series):
+            rmse = sqrt(mean_squared_error(Y__[:,i], Yt__[:,i]))
+            mae = mean_absolute_error(Y__[:,i], Yt__[:,i])
+            MAPE = mape(Yt__[:, i], Y__[:, i])
+            rrse_error = rrse(Y__[:,i], Yt__[:,i])
+            
+            # #print('Outsample RRSE for serie {} is {} \n'.format(i+1,rrse_error), file=f)
+            # print('Outsample RMSE for serie {} is {} \n'.format(i+1,rmse), file=f)
+            # print('Outsample MAE for serie {} is {} \n'.format(i+1,mae), file=f)
+            # #print('Outsample SMAPE for serie {} is {} \n'.format(i+1,smape(Yt__[:,i],Y__[:,i])),file=f)
+            # print('Outsample MAPE for serie {} is {} \n'.format(i + 1, 100*MAPE), file=f)
+            errors[0,i] = rmse
+            errors[1, i] = mae
+            errors[2, i] = MAPE
+            errors[3,i] = rrse_error
 
     # plt.figure(figsize=(16*3,10*2))
     k = 1

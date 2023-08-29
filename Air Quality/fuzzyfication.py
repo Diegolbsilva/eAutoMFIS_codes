@@ -16,15 +16,15 @@ class Fuzzification:
     
     
     def fuzzify(self,values,mf_params,num_groups=5):
-        if self.name is 'mfdef_triangle':
+        if self.name == 'mfdef_triangle':
             mX, mf_params = self.mfdef_triangle(self,values,mf_params,num_groups = num_groups)
             return mX, mf_params
 
-        elif self.name is 'mfdef_tukkey':
+        elif self.name == 'mfdef_tukkey':
             mX, mf_params = self.mfdef_tukkey(self,values,mf_params,num_groups = num_groups)
             return mX, mf_params
 
-        elif self.name is 'mfdef_cluster':
+        elif self.name == 'mfdef_cluster':
             mX, mf_params = self.mfdef_cluster(self,values,mf_params,cluster=num_groups)
             return mX, mf_params
 

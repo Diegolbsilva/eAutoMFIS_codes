@@ -219,39 +219,39 @@ def plot_predict(lim=0,yt_totest=[],num_series=0,data=[],in_sample=[],out_sample
     errors[2, 0] = MAPE
 
     if rmse < lim:
-        with open('{}.txt'.format(filename),'w') as f:
-            for i in range(num_series):
-                rmse = sqrt(mean_squared_error(Y__[:,i], Yt__[:,i]))
-                mae = mean_absolute_error(Y__[:,i], Yt__[:,i])
-                MAPE = mape(Yt__[:, i], Y__[:, i])
-                rrse_error = rrse(Y__[:,i], Yt__[:,i])
+    #     with open('{}.txt'.format(filename),'w') as f:
+        for i in range(num_series):
+            rmse = sqrt(mean_squared_error(Y__[:,i], Yt__[:,i]))
+            mae = mean_absolute_error(Y__[:,i], Yt__[:,i])
+            MAPE = mape(Yt__[:, i], Y__[:, i])
+            rrse_error = rrse(Y__[:,i], Yt__[:,i])
                 
                 
-                print('Outsample RMSE for serie {} is {} \n'.format(i+1,rmse), file=f)
-                print('Outsample MAE for serie {} is {} \n'.format(i+1,mae), file=f)
-                print('Outsample MAPE for serie {} is {} \n'.format(i + 1, 100*MAPE), file=f)
-                print('Outsample SMAPE for serie {} is {} \n'.format(i+1,smape(Yt__[:,i],Y__[:,i])),file=f)
-                errors[0,i] = rmse
-                errors[1, i] = mae
-                errors[2, i] = MAPE
-                errors[3,i] = rrse_error
-                errors[4,i] = smape(Yt__[:,i],Y__[:,i])
+    #             print('Outsample RMSE for serie {} is {} \n'.format(i+1,rmse), file=f)
+    #             print('Outsample MAE for serie {} is {} \n'.format(i+1,mae), file=f)
+    #             print('Outsample MAPE for serie {} is {} \n'.format(i + 1, 100*MAPE), file=f)
+    #             print('Outsample SMAPE for serie {} is {} \n'.format(i+1,smape(Yt__[:,i],Y__[:,i])),file=f)
+            errors[0,i] = rmse
+            errors[1, i] = mae
+            errors[2, i] = MAPE
+            # errors[3,i] = rrse_error
+            # errors[4,i] = smape(Yt__[:,i],Y__[:,i])
 
-    plt.figure(figsize=(16*3,10*2))
-    k = 1
-    for i in range(num_series):
-        plt.subplot(fig_axis[0],fig_axis[1],k)
-        plt.title('Serie {}'.format(ndata[i]),fontsize=30)
-        plt.plot(Y__[:,i],color='blue')
-        plt.plot(Yt__[:,i],color='red')
-        plt.legend(['Predicted','Target'])
-        plt.xlabel('Time(h)',fontsize=15)
-        plt.ylabel('Value',fontsize=15)
-        k += 1
+    # plt.figure(figsize=(16*3,10*2))
+    # k = 1
+    # for i in range(num_series):
+    #     plt.subplot(fig_axis[0],fig_axis[1],k)
+    #     plt.title('Serie {}'.format(ndata[i]),fontsize=30)
+    #     plt.plot(Y__[:,i],color='blue')
+    #     plt.plot(Yt__[:,i],color='red')
+    #     plt.legend(['Predicted','Target'])
+    #     plt.xlabel('Time(h)',fontsize=15)
+    #     plt.ylabel('Value',fontsize=15)
+    #     k += 1
     
-    if errors[0,0] < lim:
-        plt.savefig('{}.png'.format(filename))    #plt.show()
-    plt.close()
+    # if errors[0,0] < lim:
+    #     plt.savefig('{}.png'.format(filename))    #plt.show()
+    # plt.close()
 
     return errors
 

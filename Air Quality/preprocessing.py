@@ -64,13 +64,17 @@ class Preprocess():
         return in_sample, out_sample, trends
 
     
-    def split_data(self):
+    def split_data(self, data=None):
         '''
         Split data into in-sample data and out-sample data
         OUTPUT: In-sample data (in_sample) and Out-sample data (out_sample)
         '''
-        in_sample = self.data[:self.data.shape[0]-self.h_prev,:]
-        out_sample = self.data[self.data.shape[0]-self.h_prev:,:]
+        if data is None:
+            in_sample = self.data[:self.data.shape[0]-self.h_prev,:]
+            out_sample = self.data[self.data.shape[0]-self.h_prev:,:]
+        else:
+            in_sample = data[:data.shape[0]-self.h_prev,:]
+            out_sample = data[data.shape[0]-self.h_prev:,:]
 
         return in_sample, out_sample
     
@@ -112,12 +116,13 @@ class Preprocess():
         return yt, yp, yp_lagged
     
     
-    def spearman_corr_weights(self):
+    def spearman_corr_weights(self,in_sample=None):
         '''
         Using Spearman's correlation to create an array of probabilities to select subsamples (for linear correlation)
         OUTPUT: array of probabilities for each input
         '''
-        in_sample, out_sample = self.split_data()
+        if in_sample is None:
+            in_sample, _ = self.split_data()
 
         spearman_corr_array = np.array([])
         for _input in range(0, in_sample.shape[1]):
@@ -129,16 +134,17 @@ class Preprocess():
         return probability_dist
 
 
-    def mutual_information_corr_weights(self):
+    def mutual_information_corr_weights(self, in_sample=None):
         '''
         Using Mutual Information correlation technique to create an array of probabilities to select subsamples (for non-linear correlation)
         OUTPUT: array of probabilities for each input
         '''
-        in_sample, out_sample = self.split_data()
+        if in_sample is None:
+            in_sample, _ = self.split_data()
 
         mi_score_array = np.array([])
-        for _input in range(0, training_set.shape[1]):
-            mi_scores = mutual_info_score(training_set[:, _input], training_set[:, target_pos])
+        for _input in range(0, in_sample.shape[1]):
+            mi_scores = mutual_info_score(in_sample[:, _input], in_sample[:, self.target_position])
             mi_score_array = np.append(mi_score_array, mi_scores)
 
         probability_dist = mi_score_array/mi_score_array.sum()
@@ -146,12 +152,14 @@ class Preprocess():
         return probability_dist
     
     
-    def linear_acf_weights(self):
+    def linear_acf_weights(self, in_sample=None):
         '''
         Using autocorrelation technique to create an array of probabilities to select the size of the subsamples selected (linear method). 
         OUTPUT: array of probabilities for each input
         '''
-        in_sample, out_sample = self.split_data()
+        if in_sample is None:
+            in_sample, _ = self.split_data()
+            
         n_rows, n_cols = in_sample.shape
         autocorrelation_matrix = np.zeros((self.lag, n_cols))
         for col in range(n_cols):
@@ -166,17 +174,19 @@ class Preprocess():
         return autocorrelation_matrix
     
     
-    def non_linear_acf_weights(self):
+    def non_linear_acf_weights(self, in_sample=None):
         '''
         Using autocorrelation technique to create an array of probabilities to select the size of the subsamples selected (linear method). 
         OUTPUT: array of probabilities for each input
         '''
-        in_sample, out_sample = self.split_data()
-        n_rows, n_cols = matrix.shape
-        autocorrelation_matrix = np.zeros((max_lag + 1, n_cols))
+        if in_sample is None:
+            in_sample, _ = self.split_data()
+            
+        n_rows, n_cols = in_sample.shape
+        autocorrelation_matrix = np.zeros((self.lag, n_cols))
         for col in range(n_cols):
             column = in_sample[:, col]
-            for lag in range(max_lag + 1):
+            for lag in range(self.lag):
                 if lag == 0:
                     autocorrelation_matrix[lag, col] = abs(mutual_info_score(column, column))
                 else:
@@ -185,6 +195,7 @@ class Preprocess():
             autocorrelation_matrix[:, col] /= autocorrelation_matrix[:, col].sum()  
         return autocorrelation_matrix
 
+    
 
     def random_sum_to(self, n, num_terms = None):
         num_terms = (num_terms or random.randint(2, n)) - 1
@@ -193,14 +204,19 @@ class Preprocess():
         return [a[i+1] - a[i] for i in range(len(a) - 1)]
 
     
-    def generate_subsamples(self, correlation_array, autocorrelation_matrix, num_inputs, in_sample = None):
+    def generate_subsamples(self, correlation_array, autocorrelation_matrix, num_inputs, in_sample = None, yt = None, yp = None, yp_lagged = None, vars_to_keep = None):
         
-        yt, yp, yp_lagged = self.delay_input(in_sample, self.lag)
+        if yt is None and yp is None and yp_lagged is None:
+            yt, yp, yp_lagged = self.delay_input(in_sample, self.lag)
         
-        vars_to_keep = np.random.choice(in_sample.shape[1], np.random.randint(1, in_sample.shape[1]+1), p=correlation_array, replace=False)
+        if vars_to_keep is None:
+            if in_sample.shape[1] <= num_inputs:
+                vars_to_keep = np.random.choice(in_sample.shape[1], np.random.randint(1, in_sample.shape[1]+1), p=correlation_array, replace=False)
+            else:
+                vars_to_keep = np.random.choice(in_sample.shape[1], np.random.randint(1, num_inputs), p=correlation_array, replace=False)
         
-        yp[:, [i for i in range(in_sample.shape[1]) if i not in vars_to_keep]] = np.nan
-        yt[:, [i for i in range(in_sample.shape[1]) if i not in vars_to_keep]] = np.nan
+        # yp[:, [i for i in range(in_sample.shape[1]) if i not in vars_to_keep]] = np.nan
+        # yt[:, [i for i in range(in_sample.shape[1]) if i not in vars_to_keep]] = np.nan
         
         var_inputs = self.random_sum_to(num_inputs, len(vars_to_keep))
         corrected_lags = []

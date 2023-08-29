@@ -184,13 +184,13 @@ class Defuzzification():
                     y_predict_[p,i] = store_height/(store_den + np.finfo(float).eps)
                     #print(y_predict_[p,i])
 
-                if show:
-                    if (p%100 < 10) and (i == 0):
-                        #plt.figure(figsize=(16,9))
-                        plt.plot(support_discourse,out)
-                        plt.title('#{} on Serie {} predicted y_hat = {}'.format(p,i,y_predict_[p,i]))
-                        plt.show()
-                        plt.close()
+                # if show:
+                #     if (p%100 < 10) and (i == 0):
+                #         #plt.figure(figsize=(16,9))
+                #         plt.plot(support_discourse,out)
+                #         plt.title('#{} on Serie {} predicted y_hat = {}'.format(p,i,y_predict_[p,i]))
+                #         plt.show()
+                #         plt.close()
             
         return y_predict_
 

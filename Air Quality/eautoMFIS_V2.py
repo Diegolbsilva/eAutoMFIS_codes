@@ -40,7 +40,7 @@ def remove_lags(mX_lagged_,lag_notused,num_series,lag):
         lag_used = np.setdiff1d(lin,lag_serie) + n*lag
         lag_used = [int(f) for f in lag_used]
         lags_used[n] = lag_used
-        print(lag_used)
+        # print(lag_used)
         if n == 0:
             new_mX = mX_lagged_[:,:,lag_used[:]]   
             #print(new_mX.shape) 
@@ -119,7 +119,7 @@ class autoMFIS():
         '''
         #Preprocessing
         if in_sample is None:
-            print('In-sample not given to autoMFIS module. Running preprocessing...')
+            # print('In-sample not given to autoMFIS module. Running preprocessing...')
             prep = Preprocess(data, lag = self.lag, h_prev = self.h_prev, num_series = self.num_series, target_position = self.target_position)
             in_sample, out_sample = prep.split_data()
             yt, yp, yp_lagged = prep.generate_subsamples(correlation_array, autocorrelation_matrix, self.inputs, in_sample)

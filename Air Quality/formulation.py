@@ -25,11 +25,11 @@ class Formulation():
                 for i in range(mX_lagged_.shape[2]):
                     for j in range(mX_lagged_.shape[1]):
                         #print(mX_lagged_[:,j,i].shape)
-                        if self.method is 'nmean':
+                        if self.method == 'nmean':
                             activation, _, _ = nmean_activation(mX_lagged_[:,j,i],self.min_activation)
-                        elif self.method is 'freq':
+                        elif self.method == 'freq':
                             activation, _, _ = freq_activation(mX_lagged_[:,j,i],self.min_activation)
-                        elif self.method is 'mean':
+                        elif self.method == 'mean':
                             activation, _, val = mean_activation(mX_lagged_[:,j,i],self.min_activation)
                             #print(f'{mX_lagged_[:,j,i].mean()} and {val}')
                             #assert (mX_lagged_[:,j,i].mean() == val), 'Values mismatch'
@@ -76,13 +76,13 @@ class Formulation():
                                 #print(count_tnorm[:,1:4])
                             tnorm_ = tnorm_product(count_tnorm)
                             #print(tnorm_min[1:4])
-                            if self.method is 'nmean':
+                            if self.method == 'nmean':
                                 #activation, _, _ = nmean_activation(tnorm_,self.min_activation)
                                 activation, _, val = nmean_activation(tnorm_,self.min_activation)
-                            elif self.method is 'freq':
+                            elif self.method == 'freq':
                                 #activation, _, _ = freq_activation(tnorm_,self.min_activation/sqrt(r))
                                 activation, _, val = freq_activation(tnorm_,self.min_activation)
-                            elif self.method is 'mean':
+                            elif self.method == 'mean':
                                 #activation, _, _ = mean_activation(tnorm_,self.min_activation/sqrt(r))
                                 activation, _, val = mean_activation(tnorm_,self.min_activation)
                                 #if (val > self.min_activation):

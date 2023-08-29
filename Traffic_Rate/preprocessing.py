@@ -62,13 +62,17 @@ class Preprocess():
 
         return in_sample, out_sample, trends
 
-    def split_data(self):
+    def split_data(self, data=None):
         '''
         Split data into in-sample data and out-sample data
         OUTPUT: In-sample data (in_sample) and Out-sample data (out_sample)
         '''
-        in_sample = self.data[:self.data.shape[0]-self.h_prev,:]
-        out_sample = self.data[self.data.shape[0]-self.h_prev:,:]
+        if data is None:
+            in_sample = self.data[:self.data.shape[0]-self.h_prev,:]
+            out_sample = self.data[self.data.shape[0]-self.h_prev:,:]
+        else:
+            in_sample = data[:data.shape[0]-self.h_prev,:]
+            out_sample = data[data.shape[0]-self.h_prev:,:]
 
         return in_sample, out_sample
 

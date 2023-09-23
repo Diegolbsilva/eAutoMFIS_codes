@@ -3,7 +3,7 @@ from sklearn.linear_model import LinearRegression
 from scipy.stats import spearmanr
 from sklearn.metrics import mutual_info_score
 import random
-
+from copy import deepcopy
 
 class Preprocess():
     '''
@@ -16,14 +16,15 @@ class Preprocess():
     - delay_input
     '''
 
+    
     def __init__(self, data, lag, h_prev = 0, num_series = 0, target_position = -1):
         self.data = data
         self.h_prev = h_prev
         self.num_series = num_series
         self.target_position = target_position
         self.lag = lag
-
-
+    
+    
     def diff_series(self):
         '''
         Classical series differentiation.
@@ -35,43 +36,84 @@ class Preprocess():
 
         return in_sample, out_sample
 
-    def detrend_series(self):
+    
+    def detrend_series(self, data=None, h_prev=None):
         '''
         Detrend method using Linear Regression.
         OUTPUT: In-sample data (in_sample), Out-sample (out_sample) data and trends of each serie (trends)
         '''
-            
-        detrended = np.zeros((self.data.shape))
-        trends = np.zeros((self.data.shape))
+        if data is None:    
+            detrended = np.zeros((self.data.shape))
+            trends = np.zeros((self.data.shape))
 
-        for i in range(self.data.shape[1]):
-            x_detrend = [k for k in range(0, self.data.shape[0])]
-            x_detrend = np.reshape(x_detrend, (len(x_detrend), 1))
-            y = self.data[:,i]
-            model = LinearRegression()
-            model.fit(x_detrend, y)
-            # calculate trend
-            trend = model.predict(x_detrend)
-            trends[:,i] = [trend[k1] for k1 in range(0,len(x_detrend))]
+            for i in range(self.data.shape[1]):
+                x_detrend = [k for k in range(0, self.data.shape[0])]
+                x_detrend = np.reshape(x_detrend, (len(x_detrend), 1))
+                y = self.data[:,i]
+                model = LinearRegression()
+                model.fit(x_detrend, y)
+                # calculate trend
+                trend = model.predict(x_detrend)
+                trends[:,i] = [trend[k1] for k1 in range(0,len(x_detrend))]
 
-            # detrend
-            detrended[:,i] = [y[k2]-trend[k2] for k2 in range(0, len(x_detrend))]
-            
-            in_sample = detrended[:detrended.shape[0]-self.h_prev,:]
-            out_sample = detrended[detrended.shape[0]-self.h_prev:,:]
+                # detrend
+                detrended[:,i] = [y[k2]-trend[k2] for k2 in range(0, len(x_detrend))]
+
+                if h_prev is None:
+                    in_sample = detrended[:detrended.shape[0]-self.h_prev,:]
+                    out_sample = detrended[detrended.shape[0]-self.h_prev:,:]
+                else:
+                    in_sample = detrended[:detrended.shape[0]-h_prev,:]
+                    out_sample = detrended[detrended.shape[0]-h_prev:,:]
+        else:
+            detrended = np.zeros((data.shape))
+            trends = np.zeros((data.shape))
+
+            for i in range(data.shape[1]):
+                x_detrend = [k for k in range(0, data.shape[0])]
+                x_detrend = np.reshape(x_detrend, (len(x_detrend), 1))
+                y = data[:,i]
+                model = LinearRegression()
+                model.fit(x_detrend, y)
+                # calculate trend
+                trend = model.predict(x_detrend)
+                trends[:,i] = [trend[k1] for k1 in range(0,len(x_detrend))]
+
+                # detrend
+                detrended[:,i] = [y[k2]-trend[k2] for k2 in range(0, len(x_detrend))]
+                
+                if h_prev is None:
+                    in_sample = detrended[:detrended.shape[0]-self.h_prev,:]
+                    out_sample = detrended[detrended.shape[0]-self.h_prev:,:]
+                else:
+                    in_sample = detrended[:detrended.shape[0]-h_prev,:]
+                    out_sample = detrended[detrended.shape[0]-h_prev:,:]
 
         return in_sample, out_sample, trends
 
-    def split_data(self):
+    
+    def split_data(self, data=None, h_prev=None):
         '''
         Split data into in-sample data and out-sample data
         OUTPUT: In-sample data (in_sample) and Out-sample data (out_sample)
         '''
-        in_sample = self.data[:self.data.shape[0]-self.h_prev,:]
-        out_sample = self.data[self.data.shape[0]-self.h_prev:,:]
+        if data is None:
+            if h_prev is None:
+                in_sample = self.data[:self.data.shape[0]-self.h_prev,:]
+                out_sample = self.data[self.data.shape[0]-self.h_prev:,:]
+            else:
+                in_sample = self.data[:self.data.shape[0]-h_prev,:]
+                out_sample = self.data[self.data.shape[0]-h_prev:,:]
+        else:
+            if h_prev is None:
+                in_sample = data[:data.shape[0]-self.h_prev,:]
+                out_sample = data[data.shape[0]-self.h_prev:,:]
+            else:
+                in_sample = data[:data.shape[0]-h_prev,:]
+                out_sample = data[data.shape[0]-h_prev:,:]
 
         return in_sample, out_sample
-
+    
     
     def delay_input(self,in_sample=None, lag = 0):
         '''
@@ -108,8 +150,8 @@ class Preprocess():
                     yp_lagged[:,i*lag+k] = self.data[lag-k:self.data.shape[0]- self.h_prev - k-1,i]
 
         return yt, yp, yp_lagged
-
-
+    
+    
     def spearman_corr_weights(self,in_sample=None, target_position=None):
         '''
         Using Spearman's correlation to create an array of probabilities to select subsamples (for linear correlation)
@@ -117,22 +159,23 @@ class Preprocess():
         '''
         if in_sample is None:
             in_sample, _ = self.split_data()
-
+        
         spearman_corr_array = np.array([])
-        for _input in range(0, in_sample.shape[1]):
-            if target_position is None:
+        if target_position is None:
+            for _input in range(0, in_sample.shape[1]):
                 corr_value, _ = spearmanr(in_sample[:, _input], in_sample[:, self.target_position])
-            else:
+                spearman_corr_array = np.append(spearman_corr_array, abs(corr_value))
+        else:
+            for _input in range(0, in_sample.shape[1]):
                 corr_value, _ = spearmanr(in_sample[:, _input], in_sample[:, target_position])
-
-            spearman_corr_array = np.append(spearman_corr_array, abs(corr_value))
+                spearman_corr_array = np.append(spearman_corr_array, abs(corr_value))
 
         probability_dist = spearman_corr_array/spearman_corr_array.sum()
 
         return probability_dist
 
 
-    def mutual_information_corr_weights(self, in_sample=None, target_position=None):
+    def mutual_information_corr_weights(self, in_sample=None):
         '''
         Using Mutual Information correlation technique to create an array of probabilities to select subsamples (for non-linear correlation)
         OUTPUT: array of probabilities for each input
@@ -142,10 +185,7 @@ class Preprocess():
 
         mi_score_array = np.array([])
         for _input in range(0, in_sample.shape[1]):
-            if target_position is None:
-                mi_scores = mutual_info_score(in_sample[:, _input], in_sample[:, self.target_position])
-            else:
-                mi_scores = mutual_info_score(in_sample[:, _input], in_sample[:, target_position])
+            mi_scores = mutual_info_score(in_sample[:, _input], in_sample[:, self.target_position])
             mi_score_array = np.append(mi_score_array, mi_scores)
 
         probability_dist = mi_score_array/mi_score_array.sum()
@@ -224,8 +264,11 @@ class Preprocess():
         for pos, _var in enumerate(vars_to_keep):
             lags = np.random.choice(range(self.lag), var_inputs[pos], p=autocorrelation_matrix[:, _var], replace=False)
             corrected_lags.append([(_var*self.lag) + (i) for i in lags])
-            
+
+        yp_lagged_ = yp_lagged
+
         corrected_lags = [item for sublist in corrected_lags for item in sublist]
-        yp_lagged[:, [i for i in range(in_sample.shape[1]*self.lag) if i not in corrected_lags]] = np.nan
+        yp_lagged_[:, [i for i in range(in_sample.shape[1]*self.lag) if i not in corrected_lags]] = np.nan
+        # yp_lagged_ = deepcopy(yp_lagged)
         
-        return yt, yp, yp_lagged
+        return yt, yp, yp_lagged_

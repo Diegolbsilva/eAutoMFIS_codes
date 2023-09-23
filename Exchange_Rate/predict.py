@@ -8,6 +8,7 @@ from math import sqrt
 from copy import deepcopy
 from metrics import rrse
 from preprocessing import Preprocess
+import os
 
 def predict(Fuzzyfy, lags_used = [], num_groups=5, ndata=[''], data=[],in_sample=[],out_sample=[], lag = 0, mf_params_=[],num_series=[],agg_training='',yp_lagged='',h_prev=0,n_attempt=0,wd_=[],ensemble_antecedents=[],ensemble_rules=[],not_used_lag = False, detrend_series=False, diff_series=False,filepath='',lim=0, defuzz_method='cog',fig_axis=[3,2]):
     '''
@@ -51,8 +52,10 @@ def predict(Fuzzyfy, lags_used = [], num_groups=5, ndata=[''], data=[],in_sample
         for i in range(num_series):
             mf_params = mf_params_[:,i]
             for j in range(lag):
+
                 mX, _ = Fuzzyfy.fuzzify(np.array([yp_totest[0,i*lag+j]]),mf_params,num_groups=num_groups)
                 mX_values_in[:,:,i*lag+j] = mX
+
 
                 idx_nonzero = np.where(mX[0,:] > 0)
                 idx_nonzero = idx_nonzero[0]
@@ -175,7 +178,7 @@ def plot_training(y_predict_=[],num_series=0,in_sample=[],lag=0,ndata=[],data=[]
         plt.xlabel('Time(h)',fontsize=15)
         plt.ylabel('Value',fontsize=15)
         k += 1
-    plt.savefig('/{}.png'.format(filename))
+    plt.savefig('{}.png'.format(filename))
     #plt.show()
     plt.close()
 
@@ -207,41 +210,49 @@ def plot_predict(lim=0,yt_totest=[],num_series=0,data=[],in_sample=[],out_sample
     else:
         Y__ = yt_totest
         Yt__ = out_sample
-    errors = np.zeros(shape=(2,num_series))
+    errors = np.zeros(shape=(3,num_series))
     rmse = sqrt(mean_squared_error(Yt__[:,0], Y__[:,0]))
     mae = mean_absolute_error(Yt__[:,0], Y__[:,0])
+    MAPE = mape(Yt__[:, 0], Y__[:, 0])
     errors[0,0] = rmse
     errors[1,0] = mae
+    errors[2, 0] = MAPE
+
     if rmse < lim:
-        with open('{}.txt'.format(filename),'w') as f:
-            for i in range(num_series):
-                rmse = sqrt(mean_squared_error(Y__[:,i], Yt__[:,i]))
-                mae = mean_absolute_error(Y__[:,i], Yt__[:,i])
-                rrse_error = rrse(Y__[:,i], Yt__[:,i])
+    #     with open('{}.txt'.format(filename),'w') as f:
+        for i in range(num_series):
+            rmse = sqrt(mean_squared_error(Y__[:,i], Yt__[:,i]))
+            mae = mean_absolute_error(Y__[:,i], Yt__[:,i])
+            MAPE = mape(Yt__[:, i], Y__[:, i])
+            rrse_error = rrse(Y__[:,i], Yt__[:,i])
                 
-                print('Outsample RRSE for serie {} is {} \n'.format(i+1,rrse_error), file=f)
-                print('Outsample RMSE for serie {} is {} \n'.format(i+1,rmse), file=f)
-                print('Outsample MAE for serie {} is {} \n'.format(i+1,mae), file=f)
-                print('Outsample SMAPE for serie {} is {} \n'.format(i+1,smape(Yt__[:,i],Y__[:,i])),file=f)
-                errors[0,i] = rmse
-                errors[1,i] = rrse_error
-    '''
-    plt.figure(figsize=(16*3,10*2))
-    k = 1
-    for i in range(num_series):
-        plt.subplot(fig_axis[0],fig_axis[1],k)
-        plt.title('Serie {}'.format(ndata.columns[i]),fontsize=30)
-        plt.plot(Y__[:,i],color='blue')
-        plt.plot(Yt__[:,i],color='red')
-        plt.legend(['Predicted','Target'])
-        plt.xlabel('Time(h)',fontsize=15)
-        plt.ylabel('Value',fontsize=15)
-        k += 1
+                
+    #             print('Outsample RMSE for serie {} is {} \n'.format(i+1,rmse), file=f)
+    #             print('Outsample MAE for serie {} is {} \n'.format(i+1,mae), file=f)
+    #             print('Outsample MAPE for serie {} is {} \n'.format(i + 1, 100*MAPE), file=f)
+    #             print('Outsample SMAPE for serie {} is {} \n'.format(i+1,smape(Yt__[:,i],Y__[:,i])),file=f)
+            errors[0,i] = rmse
+            errors[1, i] = mae
+            errors[2, i] = MAPE
+            # errors[3,i] = rrse_error
+            # errors[4,i] = smape(Yt__[:,i],Y__[:,i])
+
+    # plt.figure(figsize=(16*3,10*2))
+    # k = 1
+    # for i in range(num_series):
+    #     plt.subplot(fig_axis[0],fig_axis[1],k)
+    #     plt.title('Serie {}'.format(ndata[i]),fontsize=30)
+    #     plt.plot(Y__[:,i],color='blue')
+    #     plt.plot(Yt__[:,i],color='red')
+    #     plt.legend(['Predicted','Target'])
+    #     plt.xlabel('Time(h)',fontsize=15)
+    #     plt.ylabel('Value',fontsize=15)
+    #     k += 1
     
-    if errors[0,0] < lim:
-        plt.savefig('{}.png'.format(filename))    #plt.show()
-    plt.close()
-    '''
+    # if errors[0,0] < lim:
+    #     plt.savefig('{}.png'.format(filename))    #plt.show()
+    # plt.close()
+
     return errors
 
 

@@ -106,7 +106,8 @@ class autoMFIS():
         self.mY = mY
         self.mX_lagged = mX_lagged
 
-    def train(self, data, correlation_array, autocorrelation_matrix,in_sample=None, out_sample=[], lag_notused=[], debug=False):
+    def train(self, data, correlation_array, autocorrelation_matrix, yt=None,yp=[],yp_lagged=[],in_sample=None, out_sample=[], lag_notused=[], debug=False):
+    
         '''
         Training step for autoMFIS. It's divided into 6 steps, namely:
         \n - 0. Preprocessing (if not given)
@@ -132,7 +133,7 @@ class autoMFIS():
         if debug:
             print('Step 1 - Fuzzification')
 
-        Fuzzify, mf_params_, mX_, mY_, mX_lagged_ = self.fuzzify(data, in_sample, correlation_array, autocorrelation_matrix)
+        Fuzzify, mf_params_, mX_, mY_, mX_lagged_ = self.fuzzify(data, in_sample, yp, yt, yp_lagged, correlation_array, autocorrelation_matrix)
 
         #assert (mX_lagged_[:,:,not_select_subsample] == 0).all(), "Cant hide subsample"
 
@@ -178,7 +179,7 @@ class autoMFIS():
         return mX_lagged_, complete_rules, prem_terms, rules, agg_training, wd_ 
 
 
-    def fuzzify(self, data, in_sample, correlation_array, autocorrelation_matrix):
+    def fuzzify(self, data, in_sample,  yp, yt, yp_lagged, correlation_array, autocorrelation_matrix):
 
         if self.set_fuzzy:
             Fuzzify = self.Fuzzify
@@ -197,7 +198,7 @@ class autoMFIS():
 
             prep = Preprocess(data, lag = self.lag, h_prev = self.h_prev, num_series = self.num_series, target_position = self.target_position)
 
-            yt, yp, yp_lagged = prep.generate_subsamples(correlation_array, autocorrelation_matrix, self.inputs, in_sample)
+            _, _, yp_lagged_ = prep.generate_subsamples(correlation_array, autocorrelation_matrix, self.inputs, in_sample)
 
             self.Fuzzify = Fuzzify
             first_time = True
@@ -227,7 +228,7 @@ class autoMFIS():
             for i in range(self.num_series):
                 mf_params = mf_params_[:,i]
                 for j in range(self.lag):
-                    mX, _ = Fuzzify.fuzzify(yp_lagged[:,i*self.lag+j],mf_params,num_groups=self.num_groups)
+                    mX, _ = Fuzzify.fuzzify(yp_lagged_[:,i*self.lag+j],mf_params,num_groups=self.num_groups)
                     mX_lagged_[:,:,i*self.lag+j] = mX
                     #print(i*lag+j)
             # mX_lagged_[:,:,not_select_subsample] = 0
